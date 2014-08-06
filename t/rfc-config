@@ -1,0 +1,17 @@
+### RFC config file
+
+base	= /tmp/rfcs
+baseurl	= http://tools.ietf.org
+
+[src]
+index   = $baseurl/rfc/rfc-index.txt
+html	= $baseurl/html/rfc%04d
+txt	= $baseurl/rfc/rfc%04d.txt
+pdf	= $baseurl/pdf/rfc%04d
+
+[cache]
+dir	= $base
+out     = $base/rfc%04d.txt
+index   = $base/rfc-index.txt
+
+### That's all, folks!

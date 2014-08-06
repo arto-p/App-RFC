@@ -1,0 +1,6 @@
+Revision history for Perl extension App::RFC.
+
+0.01  Wed Aug  6 18:15:32 2014
+	- original version; created by h2xs 1.23 with options
+		-X -n App::RFC
+
