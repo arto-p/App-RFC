@@ -7,3 +7,4 @@ rfc.conf
 scripts/RFC.pl
 t/01-app-rfc.t
 t/rfc-config
+t/rfc-index.txt

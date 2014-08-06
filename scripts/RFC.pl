@@ -15,7 +15,7 @@ our $VERSION = qw$Revision: $[1] || "0.02";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 my %opt = ( 't' => "txt", 'c' => "/etc/rfc.conf", 'v' => 0 );
 
-getopts ("hiTsevt:c:",\%opt);
+getopts ("hiTDsevt:c:",\%opt);
 
 if (exists$opt{'h'} or not @ARGV) {
     print STDERR "usage: $prg {options} #rfc\n";
@@ -35,10 +35,61 @@ if ($ARGV[0] eq "index") {
     $ua->timeout(10);
     $ua->env_proxy;
 
+    my $tmp = sprintf "%s.%d", $conf->{'cache'}->{'index'}, $$;
     vprint "%s -> %s", $conf->{'src'}->{'index'}, $conf->{'cache'}->{'index'};
+
     my $resp = $ua->get($conf->{'src'}->{'index'},
-                        ':content_file' => $conf->{'cache'}->{'index'});
-    exit !$resp->is_success;
+                        ':content_file' => $tmp);
+    unless ($resp->is_success) {
+        unlink $tmp;
+        die sprintf "%s fail: failure retrieve %s: %s\n",
+            $prg, $conf->{'src'}->{'index'}, $!;
+    }
+
+    if (exists $opt{'D'}) {
+        my $old = get_index($conf->{'cache'}->{'index'});
+        my $new = get_index($tmp);
+
+        my ( @diff, @new );
+        foreach my $num (sort { $a <=> $b } keys %$new) {
+            unless (exists $old->{ $num }) {
+                push @new, $num;
+                next;
+            }
+            if ($old->{ $num } ne $new->{ $num }) {
+                push @diff, $num;
+                next;
+            }
+        }
+
+        if (@new) {
+            print "New rfc(s):\n";
+            foreach my $num (@new) {
+                if (exists $opt{'e'}) {
+                    printf "%04d %s\n", $num, $new->{ $num };
+                }
+                else {
+                    print $num, "\n";
+                }
+            }
+        }
+        if (@diff) {
+            print "Changed rfc(s):\n";
+            foreach my $num (@diff) {
+                if (exists $opt{'e'}) {
+                    printf "%04d %s\n     -- \n     %s\n\n", $num,
+                        $old->{ $num }, $new->{ $num };
+                }
+                else {
+                    print $num, "\n";
+                }
+            }
+        }
+    }
+
+    rename $tmp, $conf->{'cache'}->{'index'} or
+        die sprintf "%s fail: error rename index file: %s\n", $prg, $!;
+    exit;
 }
 
 if (exists $opt{'T'}) {
@@ -60,6 +111,8 @@ if (exists $opt{'s'}) {
     while (my ($rfc, $text) = each %$ind) {
 	push @ary, $text =~ m#$re# ? $rfc : ();
     }
+
+    exit unless @ary;
 
     if (exists $opt{'e'}) {
         print join "\n\n", map { sprintf "%04d %s", $_, $ind->{ $_ } }
@@ -199,6 +252,11 @@ for rfc, rather only rfc number.
 Be a more verbose.
 
 =item I<-t str>
+
+=item I<-D>
+
+When download new C<rfc-index.txt> generate list of new and different
+rfcs.
 
 =back
 
