@@ -4,3 +4,8 @@ Revision history for Perl extension App::RFC.
 	- original version; created by h2xs 1.23 with options
 		-X -n App::RFC
 
+0.02  Wed Aug  6 22:13:49 2014
+        - First working version:
+         1. Download rfc-index.txt
+         2. Download and display rfc by number (and cache it)
+         3. Able to search through rfc-index.txt and display result.

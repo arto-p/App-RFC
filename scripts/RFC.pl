@@ -11,7 +11,7 @@ sub get_config ($);
 sub vprint ($;@);
 sub run_pager ($);
 
-our $VERSION = qw$Revision: $[1];
+our $VERSION = qw$Revision: $[1] || "0.02";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 my %opt = ( 't' => "txt", 'c' => "/etc/rfc.conf", 'v' => 0 );
 
@@ -152,27 +152,78 @@ __END__
 
 =head1 NAME
 
-RFC.pl -- Perl script for blah blah blah
+RFC.pl -- Perl script for get and display rfc by number.
 
 =head1 SYNOPSIS
 
-  RFC.pl {options} [arguments];
+  RFC.pl {options} [arguments]
 
 =head1 DESCRIPTION
 
-Stub documentation for RFC.pl, created by Emacs.
+This script can retrieve and display rfc by number and search locally
+through rfc-index.txt and display result.
 
 =head2 OPTIONS
 
-None by default.
+=over 2
+
+=item I<-h>
+
+Short help message.
+
+=item I<-c file>
+
+Path to config file (default is C</etc/rfc.conf>). Format of config file see
+in L<CONFIG FILE FORMAT>.
+
+=item I<-s>
+
+Search through local rfc-index.txt file and display result. Argument is
+perl regular expression for searching.
+
+=item I<-i>
+
+Do case-insensitive searching.
+
+=item I<-T>
+
+Print out header for rfc numbers from rfc-index.txt.
+
+=item I<-e>
+
+For "search" operation, print out "extended" result, full header
+for rfc, rather only rfc number.
+
+=item I<-v>
+
+Be a more verbose.
+
+=item I<-t str>
+
+=back
+
+=head1 CONFIG FILE FORMAT
+
+Config file has INI format. First, unnamed section contains
+common variables which may substitute variables in next sections.
+Also here may be defined C<pager> option, contains "pager" program
+for display rfc (e.g. I<less>).
+
+B<src> section contains C<index> option -- url for rfc-index.txt file.
+Also there must be C<txt> option -- url for rfc by number in C<sprintf>
+format (e.g. C<url-to-rfc%04d.txt>).
+
+And B<cache> section contains options related to I<caching> results:
+C<rfc-index.txt> and rfcs itself: C<dir> -- directory for cache,
+C<out> -- name for rfc cache result and C<index> -- file for rfc-index.txt.
 
 =head1 SEE ALSO
 
-Mention other useful documentation ...
+L<http://tools.ietf.org>
 
 =head1 AUTHOR
 
-Artur Penttinen E<lt>artur.penttinen@stonesoft.comE<gt>
+Artur Penttinen E<lt>arto+app-rfc@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
