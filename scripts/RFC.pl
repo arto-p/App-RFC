@@ -247,40 +247,34 @@ through rfc-index.txt and display result.
 
 =over 2
 
-=item I<-h>
+=item I<--help|h>
 
 Short help message.
 
-=item I<-c file>
+=item I<--conf|c=file>
 
 Path to config file (default is C</etc/rfc.conf>). Format of config file see
 in L<CONFIG FILE FORMAT>.
 
-=item I<-s>
+=item I<--search|s>
 
 Search through local rfc-index.txt file and display result. Argument is
 perl regular expression for searching.
 
-=item I<-i>
+=item I<--ignore|i>
 
 Do case-insensitive searching.
 
-=item I<-T>
-
-Print out header for rfc numbers from rfc-index.txt.
-
-=item I<-e>
+=item I<--enhanced|e>
 
 For "search" operation, print out "extended" result, full header
 for rfc, rather only rfc number.
 
-=item I<-v>
+=item I<--verbose|v>
 
 Be a more verbose.
 
-=item I<-t str>
-
-=item I<-D>
+=item I<--diff|D>
 
 When download new C<rfc-index.txt> generate list of new and different
 rfcs.
