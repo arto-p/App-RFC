@@ -13,7 +13,7 @@ sub get_config ($);
 sub vprint ($;@);
 sub run_pager ($);
 
-our $VERSION = qw$Revision: $[1] || "0.02";
+our $VERSION = qw$Revision: $[1] || "0.03";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 
 my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff ) =
