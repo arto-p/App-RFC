@@ -4,6 +4,7 @@ use strict;
 
 use Getopt::Std;
 use LWP::UserAgent;
+use HTTP::Date;
 use POSIX qw( strftime );
 
 sub get_index ($);
@@ -15,7 +16,7 @@ our $VERSION = qw$Revision: $[1] || "0.02";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 my %opt = ( 't' => "txt", 'c' => "/etc/rfc.conf", 'v' => 0 );
 
-getopts ("hiTDsevt:c:",\%opt);
+getopts ("hiTDsevft:c:",\%opt);
 
 if (exists$opt{'h'} or not @ARGV) {
     print STDERR "usage: $prg {options} #rfc\n";
@@ -32,21 +33,37 @@ unless (-d $conf->{'cache'}->{'dir'}) {
 
 if ($ARGV[0] eq "index") {
     my $ua = new LWP::UserAgent;
-    $ua->timeout(10);
+    $ua->timeout($conf->{'const'}->{'timeout'} || 10);
     $ua->env_proxy;
     if (exists $conf->{'const'}->{'user-agent'}) {
 	$ua->agent($conf->{'const'}->{'user-agent'});
     }
 
+    vprint "get head from %s", $conf->{'src'}->{'index'};
+    my $resp = $ua->head($conf->{'src'}->{'index'});
+    unless ($resp->is_success) {
+	die sprintf "%s fail: failed get header: %s\n", $prg, $resp->status_line;
+    }
+
+    my $remote_time = str2time($resp->header("last-modified"));
+    my $local_time = ( stat $conf->{'cache'}->{'index'} )[10] || 0;
+
+    vprint "Local:  %s", strftime "%d-%b-%Y %H:%M:%S", localtime $local_time;
+    vprint "Remote: %s", strftime "%d-%b-%Y %H:%M:%S", localtime $remote_time;
+
+    unless ($local_time < $remote_time || exists $opt{'f'}) {
+	exit;
+    }
+
     my $tmp = sprintf "%s.%d", $conf->{'cache'}->{'index'}, $$;
     vprint "%s -> %s", $conf->{'src'}->{'index'}, $conf->{'cache'}->{'index'};
 
-    my $resp = $ua->get($conf->{'src'}->{'index'},
-                        ':content_file' => $tmp);
+    $resp = $ua->get($conf->{'src'}->{'index'},
+		     ':content_file' => $tmp);
     unless ($resp->is_success) {
         unlink $tmp;
         die sprintf "%s fail: failure retrieve %s: %s\n",
-            $prg, $conf->{'src'}->{'index'}, $!;
+            $prg, $conf->{'src'}->{'index'}, $resp->status_lne;
     }
 
     if (exists $opt{'D'}) {
@@ -140,7 +157,7 @@ defined($pid) or die sprintf "%s fail: failed fork: %s\n", $prg, $!;
 
 unless ($pid) {
     my $ua = new LWP::UserAgent;
-    $ua->timeout(10);
+    $ua->timeout($conf->{'const'}->{'timeout'} || 10);
     $ua->env_proxy;
     if (exists $conf->{'const'}->{'user-agent'}) {
 	$ua->agent($conf->{'const'}->{'user-agent'});
