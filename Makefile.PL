@@ -6,9 +6,10 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME	=> "App::RFC",
     VERSION	=> "0.02",
-    PREREQ_PM	=> { 'Getopt::Std' => 0,
-                     'LWP::UserAgent' => 0,
+    PREREQ_PM	=> { 'Getopt::Long' => 0,
+		     'LWP::UserAgent' => 0,
 		     'HTTP::Date' => 0,
+		     'HTTP::Headers' => 0,
 	     	     'Test::More' => 0 },
     EXE_FILES	=> [ qw( scripts/RFC.pl ) ],
     ABSTRACT	=> "Retrieve and display RFC by numbers",

@@ -2,9 +2,10 @@
 
 use strict;
 
-use Getopt::Std;
+use Getopt::Long;
 use LWP::UserAgent;
 use HTTP::Date;
+use HTTP::Headers;
 use POSIX qw( strftime );
 
 sub get_index ($);
@@ -14,16 +15,35 @@ sub run_pager ($);
 
 our $VERSION = qw$Revision: $[1] || "0.02";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
-my %opt = ( 't' => "txt", 'c' => "/etc/rfc.conf", 'v' => 0 );
 
-getopts ("hiTDsevft:c:",\%opt);
+my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff ) =
+    ( 0, 0, "/etc/rfc.conf", 0, 0, 0, 0, 0 );
 
-if (exists$opt{'h'} or not @ARGV) {
-    print STDERR "usage: $prg {options} #rfc\n";
+Getopt::Long::Configure("bundling");
+GetOptions('help|h'	=> \$help,
+           'verbose|v+'	=> \$verbose,
+           'conf|c=s'	=> \$config,
+           'enhanced|e'	=> \$enhanced,
+           'force|f'	=> \$force,
+           'search|s'	=> \$search,
+           'diff|D'	=> \$diff,
+           'ignore|i'	=> \$ignore) or
+    die sprintf "%s fail: error in command line arguments\n", $prg;
+
+if ($help or not @ARGV) {
+    print STDERR "usage: $prg {options} #rfc\n",
+        "\t--help\t\t- short help message\n" ,
+        "\t--verbose\t- be more verbose\n",
+        "\t--conf file\t- config file [$config]\n",
+        "\t--enhanced\t- print enhanced info\n",
+        "\t--force\t\t- force operation\n",
+        "\t--diff\t\t- when update index print difference\n",
+        "\t--search\t- search operation\n",
+        "\t--ignore\t- ignore case in search\n";
     exit;
 }
 
-my $conf = get_config($opt{'c'}) or die sprintf "%s fail: no config\n", $prg;
+my $conf = get_config($config) or die sprintf "%s fail: no config\n", $prg;
 
 unless (-d $conf->{'cache'}->{'dir'}) {
     mkdir $conf->{'cache'}->{'dir'}, 01777 or
@@ -31,42 +51,43 @@ unless (-d $conf->{'cache'}->{'dir'}) {
             $prg, $conf->{'cache'}->{'dir'}, $!;
 }
 
+my $hdr = new HTTP::Headers('host' => ( split "/", $conf->{'src'}->{'index'} )[2],
+			    'accept' => "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+			    'accept_language' => "en-us,en;q=0.5",
+			    'connection' => "close",
+			    'cache_control' => "max-age=0");
+
+my $ua = new LWP::UserAgent('default_headers' => $hdr);
+$ua->timeout($conf->{'const'}->{'timeout'} || 10);
+$ua->env_proxy;
+
+if (exists $conf->{'const'}->{'user-agent'}) {
+    $ua->agent($conf->{'const'}->{'user-agent'});
+}
+
 if ($ARGV[0] eq "index") {
-    my $ua = new LWP::UserAgent;
-    $ua->timeout($conf->{'const'}->{'timeout'} || 10);
-    $ua->env_proxy;
-    if (exists $conf->{'const'}->{'user-agent'}) {
-	$ua->agent($conf->{'const'}->{'user-agent'});
-    }
-
-    vprint "get head from %s", $conf->{'src'}->{'index'};
-    my $resp = $ua->head($conf->{'src'}->{'index'});
-    unless ($resp->is_success) {
-	die sprintf "%s fail: failed get header: %s\n", $prg, $resp->status_line;
-    }
-
-    my $remote_time = str2time($resp->header("last-modified"));
-    my $local_time = ( stat $conf->{'cache'}->{'index'} )[10] || 0;
-
-    vprint "Local:  %s", strftime "%d-%b-%Y %H:%M:%S", localtime $local_time;
-    vprint "Remote: %s", strftime "%d-%b-%Y %H:%M:%S", localtime $remote_time;
-
-    unless ($local_time < $remote_time || exists $opt{'f'}) {
-	exit;
-    }
 
     my $tmp = sprintf "%s.%d", $conf->{'cache'}->{'index'}, $$;
-    vprint "%s -> %s", $conf->{'src'}->{'index'}, $conf->{'cache'}->{'index'};
+    my $local_time = time2str(( stat $conf->{'cache'}->{'index'} )[10] || 0);
 
-    $resp = $ua->get($conf->{'src'}->{'index'},
-		     ':content_file' => $tmp);
+    vprint "%s -> %s [%s]", $conf->{'src'}->{'index'}, $conf->{'cache'}->{'index'},
+	$local_time;
+
+    unless ($force) {
+	$ua->default_header('if_modified_since' => $local_time);
+    }
+    my $resp = $ua->get($conf->{'src'}->{'index'},
+			':content_file' => $tmp);
     unless ($resp->is_success) {
         unlink $tmp;
+	if ($resp->code == 304) {
+	    exit;
+	}
         die sprintf "%s fail: failure retrieve %s: %s\n",
-            $prg, $conf->{'src'}->{'index'}, $resp->status_lne;
+            $prg, $conf->{'src'}->{'index'}, $resp->status_line;
     }
 
-    if (exists $opt{'D'}) {
+    if ($diff) {
         my $old = get_index($conf->{'cache'}->{'index'});
         my $new = get_index($tmp);
 
@@ -85,7 +106,7 @@ if ($ARGV[0] eq "index") {
         if (@new) {
             print "New rfc(s):\n";
             foreach my $num (@new) {
-                if (exists $opt{'e'}) {
+                if ($enhanced) {
                     printf "%04d %s\n", $num, $new->{ $num };
                 }
                 else {
@@ -96,7 +117,7 @@ if ($ARGV[0] eq "index") {
         if (@diff) {
             print "Changed rfc(s):\n";
             foreach my $num (@diff) {
-                if (exists $opt{'e'}) {
+                if ($enhanced) {
                     printf "%04d %s\n     -- \n     %s\n\n", $num,
                         $old->{ $num }, $new->{ $num };
                 }
@@ -112,20 +133,9 @@ if ($ARGV[0] eq "index") {
     exit;
 }
 
-if (exists $opt{'T'}) {
+if ($search) {
     my $ind = get_index($conf->{'cache'}->{'index'});
-
-    foreach my $rfc (@ARGV) {
-	if (exists $ind->{int$ARGV[0]}) {
-	    printf "%04d %s\n", $rfc, $ind->{ int $rfc };
-	}
-    }
-    exit;
-}
-
-if (exists $opt{'s'}) {
-    my $ind = get_index($conf->{'cache'}->{'index'});
-    my $re = sprintf "(?%s)(?:%s)", exists $opt{'i'} ? "smi" : "sm", join "|", @ARGV;
+    my $re = sprintf "(?%s)(?:%s)", $ignore ? "smi" : "sm", join "|", @ARGV;
     my @ary;
 
     while (my ($rfc, $text) = each %$ind) {
@@ -134,7 +144,7 @@ if (exists $opt{'s'}) {
 
     exit unless @ary;
 
-    if (exists $opt{'e'}) {
+    if ($enhanced) {
         print join "\n\n", map { sprintf "%04d %s", $_, $ind->{ $_ } }
             sort { $a <=> $b } @ary; print "\n";
     }
@@ -144,7 +154,7 @@ if (exists $opt{'s'}) {
     exit;
 }
 
-my $url = sprintf $conf->{'src'}->{ $opt{'t'} }, $ARGV[0];
+my $url = sprintf $conf->{'src'}->{'txt'}, $ARGV[0];
 my $out = sprintf $conf->{'cache'}->{'out'}, $ARGV[0];
 
 if (-f $out) {
@@ -156,13 +166,6 @@ my $pid = fork();
 defined($pid) or die sprintf "%s fail: failed fork: %s\n", $prg, $!;
 
 unless ($pid) {
-    my $ua = new LWP::UserAgent;
-    $ua->timeout($conf->{'const'}->{'timeout'} || 10);
-    $ua->env_proxy;
-    if (exists $conf->{'const'}->{'user-agent'}) {
-	$ua->agent($conf->{'const'}->{'user-agent'});
-    }
-
     my $resp = $ua->get($url, ':content_file' => $out);
     exit !$resp->is_success;
 }
@@ -207,7 +210,7 @@ sub get_config ($) {
 
 sub vprint ($;@) {
     my $fmt = shift;
-    return unless ($opt{'v'});
+    return unless ($verbose);
     my $time = strftime "%d-%b-%Y %H:%M:%S", localtime;
     printf STDERR "[%s] $fmt\n", $time, @_;
 }
