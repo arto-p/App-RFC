@@ -8,6 +8,7 @@ WriteMakefile(
     VERSION	=> "0.02",
     PREREQ_PM	=> { 'Getopt::Std' => 0,
                      'LWP::UserAgent' => 0,
+		     'HTTP::Date' => 0,
 	     	     'Test::More' => 0 },
     EXE_FILES	=> [ qw( scripts/RFC.pl ) ],
     ABSTRACT	=> "Retrieve and display RFC by numbers",
