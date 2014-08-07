@@ -34,6 +34,9 @@ if ($ARGV[0] eq "index") {
     my $ua = new LWP::UserAgent;
     $ua->timeout(10);
     $ua->env_proxy;
+    if (exists $conf->{'const'}->{'user-agent'}) {
+	$ua->agent($conf->{'const'}->{'user-agent'});
+    }
 
     my $tmp = sprintf "%s.%d", $conf->{'cache'}->{'index'}, $$;
     vprint "%s -> %s", $conf->{'src'}->{'index'}, $conf->{'cache'}->{'index'};
@@ -139,6 +142,10 @@ unless ($pid) {
     my $ua = new LWP::UserAgent;
     $ua->timeout(10);
     $ua->env_proxy;
+    if (exists $conf->{'const'}->{'user-agent'}) {
+	$ua->agent($conf->{'const'}->{'user-agent'});
+    }
+
     my $resp = $ua->get($url, ':content_file' => $out);
     exit !$resp->is_success;
 }
