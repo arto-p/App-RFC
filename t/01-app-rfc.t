@@ -29,7 +29,7 @@ ok(-f "$outdir/rfc-index.txt", "rfc-index.txt");
 $ret = system "@exe -s 'Hypertext.*Protocol' > $outdir/hypertext-protocol1.txt";
 ok($ret == 0, "execute grep 'Hypertext.*Protocol'");
 my @out1 = do { open F, "$outdir/hypertext-protocol1.txt" and <F> }; chomp @out1;
-ok($out1[0] == 1945 && $out1[1] == 2068, "result ok");
+ok($#out1 > 1 && $out1[0] == 1945 && $out1[1] == 2068, "result ok");
 
 $ret = system "@exe -s 'hypertext.*protocol' > $outdir/hypertext-protocol2.txt";
 ok($ret == 0, "execute grep 'hypertext.*protocol'");
@@ -39,7 +39,7 @@ ok($#out2 == -1, "result ok");
 $ret = system "@exe -si 'hypertext.*protocol' > $outdir/hypertext-protocol3.txt";
 ok($ret == 0, "execute grep 'hypertext.*protocol'");
 my @out3 = do { open F, "$outdir/hypertext-protocol3.txt" and <F> }; chomp @out3;
-ok($out3[0] == 1945 && $out3[1] == 2068, "result ok");
+ok($#out3 > 1 && $out3[0] == 1945 && $out3[1] == 2068, "result ok");
 
 # Retrieve rfc
 $ret = system "@exe 2616 > $outdir/2616.out";
@@ -50,7 +50,7 @@ like($body, qr/Request for Comments: 2616/, "rfc 2616 body");
 
 # Update index
 copy $indx, "$outdir/rfc-index.txt";
-$ret = system "@exe -D -e index > $outdir/index-diff";
+$ret = system "@exe -Df -e index > $outdir/index-diff";
 ok($ret == 0, "index + diff");
 my $diff = do { local $/; open F, "$outdir/index-diff" and <F> };
 like($diff, qr/(?sm)New rfc\(s\):\s+7316.+?7318/, "new rfcs");
