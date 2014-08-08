@@ -1,16 +1,15 @@
 ### RFC config file
 
 base	= /tmp/rfcs
-baseurl	= http://tools.ietf.org
+baseurl	= file:///tmp
+
 pager	= cat
 user-agent = Lynx/2.8.8dev.16 libwww-FM/2.14 SSL-MM/1.4.1 OpenSSL/1.0.1e-fips
 timeout	= 60
 
 [src]
-index   = $baseurl/rfc/rfc-index.txt
-html	= $baseurl/html/rfc%04d
-txt	= $baseurl/rfc/rfc%04d.txt
-pdf	= $baseurl/pdf/rfc%04d
+index   = $baseurl/rfc-index.txt
+txt	= $baseurl/rfc%04d.txt
 
 [cache]
 dir	= $base
