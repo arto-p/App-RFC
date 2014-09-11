@@ -13,7 +13,7 @@ sub get_config ($);
 sub vprint ($;@);
 sub run_pager ($);
 
-our $VERSION = qw$Revision: $[1] || "0.03";
+our $VERSION = qw$Revision: $[1] || "0.04";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 
 my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff ) =
@@ -70,12 +70,13 @@ if ($ARGV[0] eq "index") {
     my $tmp = sprintf "%s.%d", $conf->{'cache'}->{'index'}, $$;
     my $local_time = time2str(( stat $conf->{'cache'}->{'index'} )[10] || 0);
 
-    vprint "%s -> %s [%s]", $conf->{'src'}->{'index'}, $conf->{'cache'}->{'index'},
-	$local_time;
+    vprint "%s -> %s [%s]", $conf->{'src'}->{'index'},
+	$conf->{'cache'}->{'index'}, $local_time;
 
     unless ($force) {
 	$ua->default_header('if_modified_since' => $local_time);
     }
+
     my $resp = $ua->get($conf->{'src'}->{'index'},
 			':content_file' => $tmp);
     unless ($resp->is_success) {
@@ -107,7 +108,7 @@ if ($ARGV[0] eq "index") {
             print "New rfc(s):\n";
             foreach my $num (@new) {
                 if ($enhanced) {
-                    printf "%04d %s\n", $num, $new->{ $num };
+                    printf "%04d %s\n\n", $num, $new->{ $num };
                 }
                 else {
                     print $num, "\n";
@@ -115,7 +116,7 @@ if ($ARGV[0] eq "index") {
             }
         }
         if (@diff) {
-            print "Changed rfc(s):\n";
+            print "\nChanged rfc(s):\n";
             foreach my $num (@diff) {
                 if ($enhanced) {
                     printf "%04d %s\n     -- \n     %s\n\n", $num,
