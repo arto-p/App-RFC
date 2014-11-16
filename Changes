@@ -12,3 +12,6 @@ Revision history for Perl extension App::RFC.
 
 0.04  Sun Aug 10 23:33:44 2014
 	- Second version.
+
+0.05  Sun Nov 16 13:56:07 2014
+	- More readable output for diff.

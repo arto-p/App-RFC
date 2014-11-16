@@ -1,16 +1,10 @@
-App-RFC version 0.01
+App-RFC version 0.05
 ====================
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
-
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
+This application is for automatic retrieve RFC by number and display it
+under $PAGER program, searching through rfc-index.txt by arbitrary text,
+and retrieving (from crontab) rfc index file (and optionally display any
+differences between old and new).
 
 INSTALLATION
 
@@ -25,7 +19,7 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  blah blah blah
+  Getopt::Long, LWP::UserAgent, HTTP::Date, HTTP::Headers.
 
 COPYRIGHT AND LICENCE
 
