@@ -24,8 +24,13 @@ sub postamble {
 install :: /etc/rfc.conf
 
 /etc/rfc.conf: rfc.conf
+ifeq (,$(wildcard /etc/rfc.conf))
 	$(NOECHO) $(ECHO) Install $< to $@
 	install -b -m644 -oroot -groot $< $@
+else
+	$(NOECHO) $(ECHO) Install $< to $@.new
+	install -b -m644 -oroot -groot $< $@.new
+endif
 
 POST
 }
