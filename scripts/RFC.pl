@@ -13,7 +13,7 @@ sub get_config ($);
 sub vprint ($;@);
 sub run_pager ($);
 
-our $VERSION = qw$Revision: $[1] || "0.04";
+our $VERSION = qw$Revision: $[1] || "0.05";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 
 my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff ) =
@@ -105,7 +105,7 @@ if ($ARGV[0] eq "index") {
         }
 
         if (@new) {
-            print "New rfc(s):\n";
+            print "New rfc(s):\n\n";
             foreach my $num (@new) {
                 if ($enhanced) {
                     printf "%04d %s\n\n", $num, $new->{ $num };
@@ -116,10 +116,10 @@ if ($ARGV[0] eq "index") {
             }
         }
         if (@diff) {
-            print "\nChanged rfc(s):\n";
+            print "Changed rfc(s):\n\n";
             foreach my $num (@diff) {
                 if ($enhanced) {
-                    printf "%04d %s\n     -- \n     %s\n\n", $num,
+                    printf "%04d %s\n     -->\n     %s\n\n", $num,
                         $old->{ $num }, $new->{ $num };
                 }
                 else {
