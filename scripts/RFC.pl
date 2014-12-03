@@ -16,8 +16,8 @@ sub run_pager ($);
 our $VERSION = qw$Revision: $[1] || "0.05";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 
-my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff ) =
-    ( 0, 0, "/etc/rfc.conf", 0, 0, 0, 0, 0 );
+my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff, $display_url ) =
+    ( 0, 0, "/etc/rfc.conf", 0, 0, 0, 0, 0, 0 );
 
 Getopt::Long::Configure("bundling");
 GetOptions('help|h'	=> \$help,
@@ -27,6 +27,7 @@ GetOptions('help|h'	=> \$help,
            'force|f'	=> \$force,
            'search|s'	=> \$search,
            'diff|D'	=> \$diff,
+           'url|u'	=> \$display_url,
            'ignore|i'	=> \$ignore) or
     die sprintf "%s fail: error in command line arguments\n", $prg;
 
@@ -157,6 +158,11 @@ if ($search) {
 
 my $url = sprintf $conf->{'src'}->{'txt'}, $ARGV[0];
 my $out = sprintf $conf->{'cache'}->{'out'}, $ARGV[0];
+
+if ($display_url == 1) {
+    print $url, "\n";
+    exit;
+}
 
 if (-f $out) {
     run_pager($out);
