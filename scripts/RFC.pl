@@ -11,12 +11,12 @@ use POSIX qw( strftime );
 sub get_index ($);
 sub get_config ($);
 sub vprint ($;@);
-sub run_pager ($);
+sub run_pager ($;$);
 
 our $VERSION = qw$Revision: $[1] || "0.05";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 
-my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff, $display_url ) =
+my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff, $display_url, $output ) =
     ( 0, 0, "/etc/rfc.conf", 0, 0, 0, 0, 0, 0 );
 
 Getopt::Long::Configure("bundling");
@@ -28,6 +28,7 @@ GetOptions('help|h'	=> \$help,
            'search|s'	=> \$search,
            'diff|D'	=> \$diff,
            'url|u'	=> \$display_url,
+           'out|o=s'	=> \$output,
            'ignore|i'	=> \$ignore) or
     die sprintf "%s fail: error in command line arguments\n", $prg;
 
@@ -40,6 +41,7 @@ if ($help or not @ARGV) {
         "\t--force\t\t- force operation\n",
         "\t--diff\t\t- when update index print difference\n",
         "\t--search\t- search operation\n",
+        "\t--out file\t- output direct to file (- == stdout)\n",
         "\t--ignore\t- ignore case in search\n";
     exit;
 }
@@ -165,7 +167,7 @@ if ($display_url == 1) {
 }
 
 if (-f $out) {
-    run_pager($out);
+    run_pager($out, $output);
 }
 
 my $pid = fork();
@@ -177,7 +179,7 @@ unless ($pid) {
     exit !$resp->is_success;
 }
 
-run_pager($out);
+run_pager($out, $output);
 
 exit 1;
 
@@ -222,7 +224,7 @@ sub vprint ($;@) {
     printf STDERR "[%s] $fmt\n", $time, @_;
 }
 
-sub run_pager ($) {
+sub run_pager ($;$) {
     foreach (1..3) {
         last if (-f $_[0]);
         sleep 1
@@ -230,6 +232,12 @@ sub run_pager ($) {
     return unless (-f $_[0]);
     unless (-t 1) {
         exec "cat", $_[0];
+    }
+    if (defined $_[1]) {
+        unless ($_[1] eq "-") {
+	    open STDOUT, "> $_[1]" or die sprintf "%s fail: can't open to out '%s': %s\n", $prg, $_[1], $!;
+        }
+	exec "cat", $_[0];
     }
     my @pager = split "\\s+", $conf->{'const'}->{'pager'} || $ENV{'PAGER'} || "more";
     exec @pager, $_[0];
@@ -285,6 +293,10 @@ Be a more verbose.
 
 When download new C<rfc-index.txt> generate list of new and different
 rfcs.
+
+=item I<--out|o>
+
+Print out rfc to file (or strdout in case of C<->).
 
 =back
 

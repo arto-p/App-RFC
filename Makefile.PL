@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME	=> "App::RFC",
-    VERSION	=> "0.05",
+    VERSION	=> "0.06",
     PREREQ_PM	=> { 'Getopt::Long' => 0,
 		     'LWP::UserAgent' => 0,
 		     'HTTP::Date' => 0,
