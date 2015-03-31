@@ -6,6 +6,7 @@ use warnings;
 
 our $VERSION = "0.06";
 
+## Parse rfc.conf file and return ref to hash.
 sub get_config ($;$) {
 	my ( $io, $default ) = @_;
 	my $body;
@@ -42,6 +43,41 @@ sub get_config ($;$) {
 	return \%hash;
 }
 
+## Parse rfc-index.txt file and return ref to hash,
+# keys are rfc numbers, values rfc descriptions.
+sub get_rfc_index ($) {
+	local $/ = "";
+	my %hash;
+
+	open F, $_[0] or return;
+
+	while (<F>) {
+		chomp;
+		if (m#^(\d+)\s+(.+)#sm) {
+			$hash{ int $1 } = $2;
+		}
+	}
+
+	close F;
+
+	return \%hash;
+}
+
+## New rfcs
+sub rfc_index_new ($$) {
+	my ( $rfc_new, $rfc_old ) = @_;
+	return sort { $a <=> $b } grep { not exists $rfc_old->{ $_ } } keys %$rfc_new;
+}
+
+## Changed rfcs
+sub rfc_index_diff ($$) {
+	my ( $rfc_new, $rfc_old ) = @_;
+	return sort { $a <=> $b }
+		grep { $rfc_old->{ $_ } ne $rfc_new->{ $_ } }
+		grep { exists $rfc_old->{ $_ } }
+		keys %$rfc_new;
+}
+
 1;
 
 __END__
@@ -65,8 +101,6 @@ and display difference between old and new version ot it.
 =head2 EXPORT
 
 None by default.
-
-
 
 =head1 SEE ALSO
 

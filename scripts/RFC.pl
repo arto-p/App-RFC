@@ -9,7 +9,6 @@ use HTTP::Headers;
 use POSIX qw( strftime );
 use App::RFC;
 
-sub get_index ($);
 sub vprint ($;@);
 sub run_pager ($;$);
 
@@ -68,7 +67,7 @@ if (exists $conf->{'const'}->{'user-agent'}) {
 
 if ($ARGV[0] eq "index") {
 
-    my $tmp = sprintf "%s.%d", $conf->{'cache'}->{'index'}, $$;
+    my $temp_index = sprintf "%s.%d", $conf->{'cache'}->{'index'}, $$;
     my $local_time = time2str(( stat $conf->{'cache'}->{'index'} )[10] || 0);
 
     vprint "%s -> %s [%s]", $conf->{'src'}->{'index'},
@@ -78,32 +77,23 @@ if ($ARGV[0] eq "index") {
 	$ua->default_header('if_modified_since' => $local_time);
     }
 
-    my $resp = $ua->get($conf->{'src'}->{'index'},
-			':content_file' => $tmp);
-    unless ($resp->is_success) {
-        unlink $tmp;
-	if ($resp->code == 304) {
+    my $response = $ua->get($conf->{'src'}->{'index'},
+		            ':content_file' => $temp_index);
+    unless ($response->is_success) {
+        unlink $temp_index;
+	if ($response->code == 304) {
 	    exit;
 	}
         die sprintf "%s fail: failure retrieve %s: %s\n",
-            $prg, $conf->{'src'}->{'index'}, $resp->status_line;
+            $prg, $conf->{'src'}->{'index'}, $response->status_line;
     }
 
     if ($diff) {
-        my $old = get_index($conf->{'cache'}->{'index'});
-        my $new = get_index($tmp);
+        my $old = App::RFC::get_rfc_index($conf->{'cache'}->{'index'});
+        my $new = App::RFC::get_rfc_index($temp_index);
 
-        my ( @diff, @new );
-        foreach my $num (sort { $a <=> $b } keys %$new) {
-            unless (exists $old->{ $num }) {
-                push @new, $num;
-                next;
-            }
-            if ($old->{ $num } ne $new->{ $num }) {
-                push @diff, $num;
-                next;
-            }
-        }
+	my @new = App::RFC::rfc_index_new($new, $old);
+	my @diff = App::RFC::rfc_index_diff($new, $old);
 
         if (@new) {
             print "New rfc(s):\n\n";
@@ -116,6 +106,7 @@ if ($ARGV[0] eq "index") {
                 }
             }
         }
+
         if (@diff) {
             print "Changed rfc(s):\n\n";
             foreach my $num (@diff) {
@@ -130,7 +121,7 @@ if ($ARGV[0] eq "index") {
         }
     }
 
-    rename $tmp, $conf->{'cache'}->{'index'} or
+    rename $temp_index, $conf->{'cache'}->{'index'} or
         die sprintf "%s fail: error rename index file: %s\n", $prg, $!;
     exit;
 }
