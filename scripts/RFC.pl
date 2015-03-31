@@ -7,9 +7,9 @@ use LWP::UserAgent;
 use HTTP::Date;
 use HTTP::Headers;
 use POSIX qw( strftime );
+use App::RFC;
 
 sub get_index ($);
-sub get_config ($);
 sub vprint ($;@);
 sub run_pager ($;$);
 
@@ -46,7 +46,7 @@ if ($help or not @ARGV) {
     exit;
 }
 
-my $conf = get_config($config) or die sprintf "%s fail: no config\n", $prg;
+my $conf = App::RFC::get_config($config) or die sprintf "%s fail: no config\n", $prg;
 
 unless (-d $conf->{'cache'}->{'dir'}) {
     mkdir $conf->{'cache'}->{'dir'}, 01777 or
@@ -54,13 +54,11 @@ unless (-d $conf->{'cache'}->{'dir'}) {
             $prg, $conf->{'cache'}->{'dir'}, $!;
 }
 
-my $hdr = new HTTP::Headers('host' => ( split "/", $conf->{'src'}->{'index'} )[2],
-			    'accept' => "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-			    'accept_language' => "en-us,en;q=0.5",
-			    'connection' => "close",
-			    'cache_control' => "max-age=0");
+my $headers = new HTTP::Headers('host' => ( split "/", $conf->{'src'}->{'index'} )[2],
+				%{ $conf->{ 'headers' } });
 
-my $ua = new LWP::UserAgent('default_headers' => $hdr);
+my $ua = new LWP::UserAgent('default_headers' => $headers);
+
 $ua->timeout($conf->{'const'}->{'timeout'} || 10);
 $ua->env_proxy;
 
@@ -194,26 +192,6 @@ sub get_index ($) {
 	}
     }
     close F;
-    return \%hash;
-}
-
-sub get_config ($) {
-    open F, $_[0] or return;
-    my $body = do { local $/; <F> };
-    close F;
-
-    $body =~ s#\#.*$##gm;
-    $body =~ s#\\\n\s+# #gsm;
-
-    my ( $common, %rest ) = split "\\[(.+?)\\]\\s*", $body;
-    my %hash = ( 'const' => { map { split "\\s*=\\s*" }
-                                  split "\\n+\\s*", $common } );
-
-    while (my ($a, $b) = each %rest) {
-        $b =~ s#\$(\w+)#$hash{'const'}->{ $1 }#gsme;
-        $hash{ $a } = { map { split "\\s*=\\s*" } split "\\n+\\s*", $b };
-    }
-
     return \%hash;
 }
 
