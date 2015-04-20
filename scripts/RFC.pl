@@ -41,6 +41,7 @@ if ($help or not @ARGV) {
         "\t--diff\t\t- when update index print difference\n",
         "\t--search\t- search operation\n",
         "\t--out file\t- output direct to file (- == stdout)\n",
+	"\t--url\t- display url before download\n",
         "\t--ignore\t- ignore case in search\n";
     exit;
 }
