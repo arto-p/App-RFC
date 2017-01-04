@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 14;
+use Test::More tests => 18;
 use File::Copy;
 
 my $outdir = "/tmp/rfcs";
@@ -16,7 +16,7 @@ my $index_new = -f "t/rfc-index.txt.new" ?
     "t/rfc-index.txt.new" : "rfc-index.txt.new";
 my $rfc2616 = -f "t/rfc2616.txt" ? "t/rfc2616.txt" : "rfc2616.txt";
 
-my @exe = ( $^X, $prog, "-c$conf" );
+my @exe = ( $^X, "-Mblib", $prog, "-c$conf" );
 
 diag("EXE: @exe");
 
@@ -36,18 +36,22 @@ ok(-f "$outdir/rfc-index.txt", "rfc-index.txt");
 ## Search
 $ret = system "@exe -s 'Hypertext.*Protocol' > $outdir/hypertext-protocol1.txt";
 ok($ret == 0, "execute grep 'Hypertext.*Protocol'");
-my @out1 = do { open F, "$outdir/hypertext-protocol1.txt" and <F> }; chomp @out1;
-ok($#out1 > 1 && $out1[0] == 1945 && $out1[1] == 2068, "result ok");
+my @out1 = do { local $/=""; open F, "$outdir/hypertext-protocol1.txt"; <F> };
+ok($#out1 > 1, "Hypertext Protocol result $#out1");
+like($out1[0], qr#^1945 #, "Hypertext Transfer Protocol -- HTTP/1.0");
+like($out1[1], qr#^2068 #, "Hypertext Transfer Protocol -- HTTP/1.1");
 
 $ret = system "@exe -s 'hypertext.*protocol' > $outdir/hypertext-protocol2.txt";
 ok($ret == 0, "execute grep 'hypertext.*protocol'");
-my @out2 = do { open F, "$outdir/hypertext-protocol2.txt" and <F> }; chomp @out2;
+my @out2 = do { local $/=""; open F, "$outdir/hypertext-protocol2.txt" and <F> };
 ok($#out2 == -1, "result ok");
 
 $ret = system "@exe -si 'hypertext.*protocol' > $outdir/hypertext-protocol3.txt";
 ok($ret == 0, "execute grep 'hypertext.*protocol'");
-my @out3 = do { open F, "$outdir/hypertext-protocol3.txt" and <F> }; chomp @out3;
-ok($#out3 > 1 && $out3[0] == 1945 && $out3[1] == 2068, "result ok");
+my @out3 = do { local $/=""; open F, "$outdir/hypertext-protocol3.txt" and <F> };
+ok($#out3 > 1, "result ok");
+like($out3[0], qr#^1945 #, "Hypertext Transfer Protocol -- HTTP/1.0");
+like($out3[1], qr#^2068 #, "Hypertext Transfer Protocol -- HTTP/1.1");
 
 # Retrieve rfc
 $ret = system "@exe 2616 > $outdir/2616.out";

@@ -11,12 +11,24 @@ use App::RFC;
 
 sub vprint ($;@);
 sub run_pager ($;$);
+sub match ($@);
+sub get_index ($);
 
 our $VERSION = qw$Revision: $[1] || "0.05";
 my $prg = ( split "[\\\\/]+",$0 )[-1];
 
-my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore, $diff, $display_url, $output ) =
-    ( 0, 0, "/etc/rfc.conf", 0, 0, 0, 0, 0, 0 );
+my ( $help, $verbose, $config, $enhanced, $force, $search, $ignore,
+     $diff, $display_url, $output, $status ) =
+    ( 0, 0, "/etc/rfc.conf", 1, 0, 0, 0, 0, 0 );
+
+my %status = ( 'best' => qr#BEST\s+CURRENT\s+PRACTICE#,
+               'draft' => qr#DRAFT\s+STANDARD#,
+               'experimental' => qr#EXPERIMENTAL#,
+               'historic' => qr#HISTORIC#,
+               'informational' => qr#INFORMATIONAL#,
+               'internet-standard' => qr#INTERNET\s+STANDARD#,
+               'proposed-standard' => qr#PROPOSED\s+STANDARD#,
+               'unknown' => qr#UNKNOWN# );
 
 Getopt::Long::Configure("bundling");
 GetOptions('help|h'	=> \$help,
@@ -27,8 +39,9 @@ GetOptions('help|h'	=> \$help,
            'search|s'	=> \$search,
            'diff|D'	=> \$diff,
            'url|u'	=> \$display_url,
+           'status|S=s'	=> \$status,
            'out|o=s'	=> \$output,
-           'ignore|i'	=> \$ignore) or
+           'ignore|i!'	=> \$ignore) or
     die sprintf "%s fail: error in command line arguments\n", $prg;
 
 if ($help or not @ARGV) {
@@ -41,8 +54,10 @@ if ($help or not @ARGV) {
         "\t--diff\t\t- when update index print difference\n",
         "\t--search\t- search operation\n",
         "\t--out file\t- output direct to file (- == stdout)\n",
-	"\t--url\t- display url before download\n",
-        "\t--ignore\t- ignore case in search\n";
+        "\t--url\t- display url before download\n",
+        "\t--ignore\t- ignore case in search\n",
+        "\t--status status - rfc's status\n";
+    print STDERR "\t  Status: @{[join', ', keys %status]}\n";
     exit;
 }
 
@@ -129,11 +144,15 @@ if ($ARGV[0] eq "index") {
 
 if ($search) {
     my $ind = get_index($conf->{'cache'}->{'index'});
-    my $re = sprintf "(?%s)(?:%s)", $ignore ? "smi" : "sm", join "|", @ARGV;
-    my @ary;
 
+    my @re = ( qr#@{[sprintf "%s(?:%s)", $ignore ? "(?i)" : "", join "|", @ARGV]}#o );
+    if (defined $status) {
+        unshift @re, qr#\(Status:\s+$status{ $status }\)#o;
+    }
+
+    my @ary;
     while (my ($rfc, $text) = each %$ind) {
-	push @ary, $text =~ m#$re# ? $rfc : ();
+	push @ary, match($text, @re) ? $rfc : ();
     }
 
     exit unless @ary;
@@ -147,6 +166,8 @@ if ($search) {
     }
     exit;
 }
+
+$ARGV[0] =~ s#^rfc##i;
 
 my $url = sprintf $conf->{'src'}->{'txt'}, $ARGV[0];
 my $out = sprintf $conf->{'cache'}->{'out'}, $ARGV[0];
@@ -213,6 +234,15 @@ sub run_pager ($;$) {
     exec @pager, $_[0];
 }
 
+sub match ($@) {
+    my $txt = shift;
+
+    foreach my $re ( @_ ) {
+        $txt =~ m#$re#sm or return 0;
+    }
+    return 1;
+}
+
 __END__
 
 =head1 NAME
@@ -245,6 +275,31 @@ in L<CONFIG FILE FORMAT>.
 
 Search through local rfc-index.txt file and display result. Argument is
 perl regular expression for searching.
+
+=item I<--status=$status>
+
+Additional filter for rfc' B<"Status"> (see RFC 2026 and RFC 6410)
+keywords. Possibly values:
+
+=over 4
+
+=item I<best> -- C<BEST CURRENT PRACTICE>
+
+=item I<draft> -- C<DRAFT STANDARD>
+
+=item I<experimental> -- C<EXPERIMENTAL>
+
+=item I<historic> -- C<HISTORIC>
+
+=item I<informational> -- C<INFORMATIONAL>
+
+=item I<internet-standard> -- C<INTERNET STANDARD>
+
+=item I<proposed-standard> -- C<PROPOSED STANDARD>
+
+=item I<inknown> -- C<UNKNOWN>
+
+=back
 
 =item I<--ignore|i>
 
