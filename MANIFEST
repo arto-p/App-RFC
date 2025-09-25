@@ -1,6 +1,7 @@
 Changes
 Makefile.PL
 MANIFEST
+README.md
 README
 rfc.conf
 scripts/RFC.pl
