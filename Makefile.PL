@@ -36,3 +36,21 @@ POST
 }
 
 ### That's all, folks!
+sub MY::postamble {
+    return <<'MAKE_FRAG';
+DIST    = $(shell rpm --eval "%dist")
+RPMS    = $(HOME)/rpmbuild/RPMS/noarch/perl-$(DISTVNAME)-2$(DIST).noarch.rpm
+SOURCE  = $(HOME)/rpmbuild/SOURCES/$(DISTVNAME).tar.gz
+
+rpm: $(RPMS)
+
+$(RPMS): $(SOURCE)
+	rpmbuild -bb --define="_VERSION $(VERSION)" perl-$(DISTNAME).spec
+
+$(SOURCE):
+	git archive --format=tar.gz --prefix=$(DISTVNAME)/ -o $@ master
+
+sign: $(RPMS)
+	rpm --addsign $<
+MAKE_FRAG
+}
