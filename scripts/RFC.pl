@@ -46,17 +46,17 @@ GetOptions('help|h'	=> \$help,
 
 if ($help or not @ARGV) {
     print STDERR "usage: $prg {options} #rfc\n",
-        "\t--help\t\t- short help message\n" ,
-        "\t--verbose\t- be more verbose\n",
-        "\t--conf file\t- config file [$config]\n",
-        "\t--enhanced\t- print enhanced info\n",
-        "\t--force\t\t- force operation\n",
-        "\t--diff\t\t- when update index print difference\n",
-        "\t--search\t- search operation\n",
-        "\t--out file\t- output direct to file (- == stdout)\n",
-        "\t--url\t- display url before download\n",
-        "\t--ignore\t- ignore case in search\n",
-        "\t--status status - rfc's status\n";
+        "\t--help|-h\t- short help message\n" ,
+        "\t--verbose|-v\t- be more verbose\n",
+        "\t--conf|-c file\t- config file [$config]\n",
+        "\t--enhanced|-e\t- print enhanced info\n",
+        "\t--force|-f\t- force operation\n",
+        "\t--diff|-D\t- when update index print difference\n",
+        "\t--search|-s\t- search operation\n",
+        "\t--out|-o file\t- output direct to file (- == stdout)\n",
+        "\t--url|-u\t- display url before download\n",
+        "\t--ignore|-i\t- ignore case in search\n",
+        "\t--status|-s status - rfc's status\n";
     print STDERR "\t  Status: @{[join', ', keys %status]}\n";
     exit;
 }
