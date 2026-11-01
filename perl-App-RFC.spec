@@ -44,3 +44,4 @@ find %{buildroot} -type f -name '*.bs' -size 0 -delete
 
 %changelog
 * Sun Nov  1 2026 Artur Penttinen  - 0.06 1
+- First release of perl-App-RFC with rpm support.

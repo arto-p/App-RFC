@@ -12,3 +12,4 @@ t/rfc-index.txt.new
 t/rfc2616.txt
 lib/App/RFC.pm
 t/02-app-rfc-config.t
+perl-App-RFC.spec
