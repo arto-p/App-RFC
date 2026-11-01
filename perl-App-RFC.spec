@@ -6,10 +6,9 @@ Group:          System Tools/Perl
 License:        GPL-1.0-or-later OR Artistic-1.0-Perl
 Url:            https://arto.homeunix.org/%{name}
 Source:         App-RFC-%{version}.tar.gz
-BuildRequires:  make
-Requires:       perl, perl(File::Find), perl(IO), perl(Text::Glob)
-Requires:       perl(Time::Local), perl(Text::Wrapper), perl(HTTP::Date)
-Requires:       perl(Pod::Usage), perl(Set::Scalar), perl(Getopt::Long)
+BuildRequires:  make, perl(Test::More)
+Requires:       perl, perl(File::Copy), perl(HTTP::Date), perl(HTTP::Headers)
+Requires:       perl(LWP::UserAgent), perl(Getopt::Long)
 
 BuildArch:      noarch
 
