@@ -32,6 +32,37 @@ else
 	install -b -m644 -oroot -groot $< $@.new
 endif
 
+SPEC    = perl-$(DISTNAME).spec
+BASE    = $(shell rpmspec -q --builtrpms --define="_VERSION $(VERSION)" $(SPEC))
+
+RPMBUILD = rpmbuild -ba --rmsource --clean --quiet --define="_VERSION $(VERSION)"
+
+NAME.srpm = $(BASE:.noarch=.src.rpm)
+NAME.rpm = $(BASE:.noarch=.noarch.rpm)
+NAME.tar = $(DISTNAME)-$(VERSION).tar.gz
+
+RPMDIR.noarch = $(HOME)/rpmbuild/RPMS/noarch
+RPMDIR.src = $(HOME)/rpmbuild/SOURCES
+RPMDIR.srpms = $(HOME)/rpmbuild/SRPMS
+
+DIST    = $(shell rpm --eval --define="_VERSION $(VERSION)" "%dist")
+RPMS    = $(HOME)/rpmbuild/RPMS/noarch/perl-$(DISTVNAME)-1$(DIST).noarch.rpm
+SOURCE  = $(HOME)/rpmbuild/SOURCES/perl-$(DISTVNAME).tar.gz
+
+rpm: $(RPMDIR.noarch)/$(NAME.rpm) $(RPMDIR.srpms)/$(NAME.srpm)
+
+sign: $(RPMDIR.noarch)/$(NAME.rpm) $(RPMDIR.srpms)/$(NAME.srpm)
+	rpmsign --addsign $^
+	$(NOECHO)echo -e "RPMs signed:\\n\\t$(RPMDIR.noarch)/$(NAME.rpm)\\n\\t$(RPMDIR.srpms)/$(NAME.srpm)"
+
+$(RPMDIR.noarch)/$(NAME.rpm): $(SPEC) $(RPMDIR.src)/$(NAME.tar)
+	$(RPMBUILD) $<
+	$(NOECHO)echo "RPM built: $@"
+
+$(RPMDIR.src)/$(NAME.tar): .git
+	git archive --format=tar.gz --prefix=$(NAME.tar:.tar.gz=)/ \
+		-o $@ master
+
 POST
 }
 
