@@ -31,17 +31,17 @@ my %status = ( 'best' => qr#BEST\s+CURRENT\s+PRACTICE#,
                'unknown' => qr#UNKNOWN# );
 
 Getopt::Long::Configure("bundling");
-GetOptions('help|h'	=> \$help,
-           'verbose|v+'	=> \$verbose,
-           'conf|c=s'	=> \$config,
-           'enhanced|e'	=> \$enhanced,
-           'force|f'	=> \$force,
-           'search|s'	=> \$search,
-           'diff|D'	=> \$diff,
-           'url|u'	=> \$display_url,
-           'status|S=s'	=> \$status,
-           'out|o=s'	=> \$output,
-           'ignore|i!'	=> \$ignore) or
+GetOptions('help|h'     => \$help,
+           'verbose|v+' => \$verbose,
+           'conf|c=s'   => \$config,
+           'enhanced|e' => \$enhanced,
+           'force|f'    => \$force,
+           'search|s'   => \$search,
+           'diff|D'     => \$diff,
+           'url|u'      => \$display_url,
+           'status|S=s' => \$status,
+           'out|o=s'    => \$output,
+           'ignore|i!'  => \$ignore) or
     die sprintf "%s fail: error in command line arguments\n", $prg;
 
 if ($help or not @ARGV) {
@@ -70,7 +70,7 @@ unless (-d $conf->{'cache'}->{'dir'}) {
 }
 
 my $headers = new HTTP::Headers('host' => ( split "/", $conf->{'src'}->{'index'} )[2],
-				%{ $conf->{ 'headers' } });
+                                %{ $conf->{ 'headers' } });
 
 my $ua = new LWP::UserAgent('default_headers' => $headers);
 
@@ -87,19 +87,19 @@ if ($ARGV[0] eq "index") {
     my $local_time = time2str(( stat $conf->{'cache'}->{'index'} )[10] || 0);
 
     vprint "%s -> %s [%s]", $conf->{'src'}->{'index'},
-	$conf->{'cache'}->{'index'}, $local_time;
+        $conf->{'cache'}->{'index'}, $local_time;
 
     unless ($force) {
-	$ua->default_header('if_modified_since' => $local_time);
+        $ua->default_header('if_modified_since' => $local_time);
     }
 
     my $response = $ua->get($conf->{'src'}->{'index'},
-		            ':content_file' => $temp_index);
+                            ':content_file' => $temp_index);
     unless ($response->is_success) {
         unlink $temp_index;
-	if ($response->code == 304) {
-	    exit;
-	}
+        if ($response->code == 304) {
+            exit;
+        }
         die sprintf "%s fail: failure retrieve %s: %s\n",
             $prg, $conf->{'src'}->{'index'}, $response->status_line;
     }
@@ -108,8 +108,8 @@ if ($ARGV[0] eq "index") {
         my $old = App::RFC::get_rfc_index($conf->{'cache'}->{'index'});
         my $new = App::RFC::get_rfc_index($temp_index);
 
-	my @new = App::RFC::rfc_index_new($new, $old);
-	my @diff = App::RFC::rfc_index_diff($new, $old);
+        my @new = App::RFC::rfc_index_new($new, $old);
+        my @diff = App::RFC::rfc_index_diff($new, $old);
 
         if (@new) {
             print "New rfc(s):\n\n";
@@ -152,7 +152,7 @@ if ($search) {
 
     my @ary;
     while (my ($rfc, $text) = each %$ind) {
-	push @ary, match($text, @re) ? $rfc : ();
+        push @ary, match($text, @re) ? $rfc : ();
     }
 
     exit unless @ary;
@@ -199,10 +199,10 @@ sub get_index ($) {
     open F, $_[0] or return;
     local $/ = "";
     while (<F>) {
-	chomp;
-	if (m#^(\d+)\s+(.+)#sm) {
-	    $hash{int$1} = $2;# =~ s#\n\s+#\n#gsmr;
-	}
+        chomp;
+        if (m#^(\d+)\s+(.+)#sm) {
+            $hash{int$1} = $2;# =~ s#\n\s+#\n#gsmr;
+        }
     }
     close F;
     return \%hash;
@@ -226,9 +226,9 @@ sub run_pager ($;$) {
     }
     if (defined $_[1]) {
         unless ($_[1] eq "-") {
-	    open STDOUT, "> $_[1]" or die sprintf "%s fail: can't open to out '%s': %s\n", $prg, $_[1], $!;
+            open STDOUT, "> $_[1]" or die sprintf "%s fail: can't open to out '%s': %s\n", $prg, $_[1], $!;
         }
-	exec "cat", $_[0];
+        exec "cat", $_[0];
     }
     my @pager = split "\\s+", $conf->{'const'}->{'pager'} || $ENV{'PAGER'} || "more";
     exec @pager, $_[0];
@@ -354,4 +354,5 @@ Copyright (C) 2014 by Artur Penttinen
 
 =cut
 
+# vim: syn=perl ts=4 sw=4 smarttab expandtab
 ### That's all, folks!

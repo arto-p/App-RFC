@@ -8,74 +8,74 @@ our $VERSION = "0.06";
 
 ## Parse rfc.conf file and return ref to hash.
 sub get_config ($;$) {
-	my ( $io, $default ) = @_;
-	my $body;
+    my ( $io, $default ) = @_;
+    my $body;
 
-	$default = $default || "__main__";
+    $default = $default || "__main__";
 
-	if (ref $io eq "GLOB" or ref $io eq "IO::File") {
-		$body = do { local $/; <$io> };
-	}
-	elsif (ref $io eq "SCALAR") {
-		$body = $$io;
-	}
-	else {
-		open F, $io or return;
-		$body = do { local $/; <F> };
-		close F;
-	}
+    if (ref $io eq "GLOB" or ref $io eq "IO::File") {
+        $body = do { local $/; <$io> };
+    }
+    elsif (ref $io eq "SCALAR") {
+        $body = $$io;
+    }
+    else {
+        open F, $io or return;
+        $body = do { local $/; <F> };
+        close F;
+    }
 
-	$body =~ s/#.*\n//gm;		# delete comments
-	$body =~ s#\n(:?\s+)#\n#gs;	# delete unnecessary  spaces
-	$body =~ s#\\\s*##gs;		# join \\-strings
+    $body =~ s/#.*\n//gm;        # delete comments
+    $body =~ s#\n(:?\s+)#\n#gs;  # delete extra spaces
+    $body =~ s#\\\s*##gs;        # join \\-strings
 
-	my ( %hash ) = ( $default , split "\\[(.+?)\\]", $body );
-	while (my ( $a, $b ) = each %hash) {
-		$hash{ $a } = { map { split "\\s*=\\s*", $_, 2 } grep !/^\s*$/, split "\n", $b };
-	}
+    my ( %hash ) = ( $default , split "\\[(.+?)\\]", $body );
+    while (my ( $a, $b ) = each %hash) {
+        $hash{ $a } = { map { split "\\s*=\\s*", $_, 2 } grep !/^\s*$/, split "\n", $b };
+    }
 
-	foreach my $k1 ( grep { $_ ne $default } keys %hash ) {
-		foreach my $k2 ( keys %{ $hash{ $k1 } } ) {
-			$hash{ $k1 }->{ $k2 } =~ s#\$(\w+)#$hash{ $default }->{ $1 }#ge;
-		}
-	}
+    foreach my $k1 ( grep { $_ ne $default } keys %hash ) {
+        foreach my $k2 ( keys %{ $hash{ $k1 } } ) {
+            $hash{ $k1 }->{ $k2 } =~ s#\$(\w+)#$hash{ $default }->{ $1 }#ge;
+        }
+    }
 
-	return \%hash;
+    return \%hash;
 }
 
 ## Parse rfc-index.txt file and return ref to hash,
 # keys are rfc numbers, values rfc descriptions.
 sub get_rfc_index ($) {
-	local $/ = "";
-	my %hash;
+    local $/ = "";
+    my %hash;
 
-	open F, $_[0] or return;
+    open F, $_[0] or return;
 
-	while (<F>) {
-		chomp;
-		if (m#^(\d+)\s+(.+)#sm) {
-			$hash{ int $1 } = $2;
-		}
-	}
+    while (<F>) {
+        chomp;
+        if (m#^(\d+)\s+(.+)#sm) {
+            $hash{ int $1 } = $2;
+        }
+    }
 
-	close F;
+    close F;
 
-	return \%hash;
+    return \%hash;
 }
 
 ## New rfcs
 sub rfc_index_new ($$) {
-	my ( $rfc_new, $rfc_old ) = @_;
-	return sort { $a <=> $b } grep { not exists $rfc_old->{ $_ } } keys %$rfc_new;
+    my ( $rfc_new, $rfc_old ) = @_;
+    return sort { $a <=> $b } grep { not exists $rfc_old->{ $_ } } keys %$rfc_new;
 }
 
 ## Changed rfcs
 sub rfc_index_diff ($$) {
-	my ( $rfc_new, $rfc_old ) = @_;
-	return sort { $a <=> $b }
-		grep { $rfc_old->{ $_ } ne $rfc_new->{ $_ } }
-		grep { exists $rfc_old->{ $_ } }
-		keys %$rfc_new;
+    my ( $rfc_new, $rfc_old ) = @_;
+    return sort { $a <=> $b }
+        grep { $rfc_old->{ $_ } ne $rfc_new->{ $_ } }
+        grep { exists $rfc_old->{ $_ } }
+        keys %$rfc_new;
 }
 
 1;
@@ -120,4 +120,5 @@ at your option, any later version of Perl 5 you may have available.
 
 =cut
 
+# vim: syn=perl ts=4 sw=4 smarttab expandtab
 ### That's all, folks!
