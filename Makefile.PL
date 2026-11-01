@@ -4,23 +4,24 @@ use 5.018;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-    NAME	=> "App::RFC",
-    VERSION	=> "0.06",
-    PREREQ_PM	=> { 'Getopt::Long' => 0,
-		     'LWP::UserAgent' => 0,
-		     'HTTP::Date' => 0,
-		     'HTTP::Headers' => 0,
-	     	     'Test::More' => 0 },
-    EXE_FILES	=> [ qw( scripts/RFC.pl ) ],
-    ABSTRACT	=> "Retrieve and display RFC by numbers",
-    AUTHOR	=> "Artur Penttinen <arto+app-rfc\@cpan.org>");
+    NAME        => "App::RFC",
+    VERSION     => "0.07",
+    PREREQ_PM   => {
+        'Getopt::Long'      => 0,
+        'LWP::UserAgent'    => 0,
+        'HTTP::Date'        => 0,
+        'HTTP::Headers'     => 0,
+        'Test::More'        => 0 },
+    EXE_FILES   => [ qw( scripts/RFC.pl ) ],
+    ABSTRACT    => "Retrieve and display RFC by numbers",
+    AUTHOR      => "Artur Penttinen <arto+app-rfc\@cpan.org>");
 
 exit;
 
 package MY;
 
 sub postamble {
-	return << 'POST'
+    return << 'POST'
 install :: /etc/rfc.conf
 
 /etc/rfc.conf: rfc.conf
@@ -66,4 +67,5 @@ $(RPMDIR.src)/$(NAME.tar): .git
 POST
 }
 
+# vim: syn=perl ts=4 sw=4 smarttab expandtab
 ### That's all, folks!
